@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"strconv"
 	"time"
@@ -48,12 +49,11 @@ func main() {
 		// read env
 		host := os.Getenv("DB_HOST")
 		user := os.Getenv("DB_USER")
-		pass := os.Getenv("DB_PASS")
+		pass := url.QueryEscape(os.Getenv("DB_PASS"))
 		port := os.Getenv("DB_PORT")
 		db := os.Getenv("DB_NAME")
 
 		pgDsn = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, pass, host, port, db)
-		fmt.Println(pgDsn)
 	}
 
 	conn, err := pgx.Connect(ctx, pgDsn)
@@ -64,7 +64,7 @@ func main() {
 	defer conn.Close(ctx)
 
 	// execute copy command
-	err = copyToCSV(ctx, conn, *sql, *out)
+	err = copyToCSV(context.Background(), conn, *sql, *out)
 	if err != nil {
 		log.Fatalf("unable to copy: %v", err)
 	}
